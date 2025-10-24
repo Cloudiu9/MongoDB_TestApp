@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>MongoDB Reviews Dashboard</title>
+    <script src="script.js" defer></script>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <h1>MongoDB Reviews Dashboard</h1>
+
+    <section>
+      <h2>Import Data (.CSV)</h2>
+
+      <form class="csvForm" data-type="users">
+        <label>Users:</label>
+        <input type="file" accept=".csv" required />
+        <button type="submit">Upload Users CSV</button>
+      </form>
+
+      <form class="csvForm" data-type="products">
+        <label>Products: </label>
+        <input type="file" accept=".csv" required />
+        <button type="submit">Upload Products CSV</button>
+      </form>
+
+      <form class="csvForm" data-type="reviews">
+        <label>Reviews:</label>
+        <input type="file" accept=".csv" required />
+        <button type="submit">Upload Reviews CSV</button>
+      </form>
+
+      <p id="uploadResult"></p>
+    </section>
+
+    <section>
+      <h2>
+        Products
+        <button class="clearBtn" data-type="products">Clear Table</button>
+      </h2>
+      <table id="productsTable"></table>
+    </section>
+
+    <section>
+      <h2>
+        Users
+        <button class="clearBtn" data-type="users">Clear Table</button>
+      </h2>
+      <table id="usersTable"></table>
+    </section>
+
+    <section>
+      <h2>
+        Reviews
+        <button class="clearBtn" data-type="reviews">Clear Table</button>
+      </h2>
+      <table id="reviewsTable"></table>
+    </section>
+
+    <section>
+      <h2>Data Analysis</h2>
+      <div id="analysisResult">Loading analysis...</div>
+    </section>
+  </body>
+</html>

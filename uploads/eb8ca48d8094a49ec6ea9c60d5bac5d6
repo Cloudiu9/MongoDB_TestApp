@@ -1,0 +1,5 @@
+﻿name,email,age,preferences
+Alex Popescu,alex.pop@mail.com,28,"{""theme"":""dark"",""language"":""ro""}"
+Maria Dobre,maria.dobre@mail.com,,"{""theme"":""light"",""notifications"":true}"
+Vlad Ene,vlad.ene@mail.com,33,
+Irina Matei,irina.matei@mail.com,29,"{""theme"":""dark"",""language"":""en"",""timezone"":""EET""}"

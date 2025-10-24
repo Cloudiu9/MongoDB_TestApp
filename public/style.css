@@ -1,0 +1,109 @@
+/* --- General Layout --- */
+:root {
+  --bg: #121212;
+  --card: #1e1e1e;
+  --text: #f2f2f2;
+  --accent: #9b5de5;
+  --border: #2c2c2c;
+}
+
+body {
+  font-family: "Inter", "Segoe UI", sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  margin: 0;
+  padding: 30px;
+}
+
+h1,
+h2 {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+section {
+  background: var(--card);
+  padding: 20px;
+  margin: 25px 0;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(155, 93, 229, 0.15);
+  border: 1px solid var(--border);
+}
+
+.csvForm {
+  display: flex;
+  justify-content: space-between;
+  max-width: 500px;
+  margin-bottom: 10px;
+}
+
+.csvForm label {
+  width: 4rem;
+}
+
+/* --- Tables --- */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  font-size: 0.95rem;
+}
+
+th,
+td {
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+}
+
+th {
+  background: #2a2a2a;
+  color: var(--accent);
+  text-align: left;
+}
+
+tr:nth-child(even) {
+  background: #181818;
+}
+
+/* --- Buttons and Inputs --- */
+button {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: 0.2s;
+  width: 160px;
+}
+
+button:hover {
+  background: #b47cff;
+}
+
+input[type="file"] {
+  background: #2a2a2a;
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 6px;
+}
+
+#uploadResult {
+  margin-top: 10px;
+  font-style: italic;
+  color: var(--accent);
+}
+
+/* --- Scrollbars (for dark mode aesthetics) --- */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #3a3a3a;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
