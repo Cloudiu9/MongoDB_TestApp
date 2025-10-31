@@ -1,141 +1,208 @@
-// === Fetch and render data ===
-async function fetchData() {
-  const res = await fetch("/data");
+let page = 1;
+const LIMIT = 50;
+
+// === Fetch paginated reviews ===
+async function fetchReviews(pageNum = 1, query = "", minRating = "") {
+  const url = new URL("/software", window.location.origin);
+  url.searchParams.set("page", pageNum);
+  url.searchParams.set("limit", LIMIT);
+  if (query) url.searchParams.set("q", query);
+  if (minRating) url.searchParams.set("minRating", minRating);
+
+  const res = await fetch(url);
   const data = await res.json();
 
-  // Dynamic rendering for flexible NoSQL structure
-  renderTable("productsTable", data.products); // no fixed columns
-  renderTable("usersTable", data.users);
-  renderTable(
-    "reviewsTable",
-    data.reviews.map((r) => ({
-      user: r.userId?.name || "Unknown",
-      product: r.productId?.name || "Unknown",
-      rating: r.rating,
-      comment: r.comment,
-    }))
-  );
+  renderTable(data.docs);
+  renderPager(data.page, data.total);
 }
-// === Render any dataset dynamically ===
-function renderTable(id, items, cols = null) {
-  const table = document.getElementById(id);
-  if (!items.length) {
-    table.innerHTML = "<tr><td>No data</td></tr>";
+
+// === Fetch global statistics ===
+async function fetchStats() {
+  const res = await fetch("/agg/stats");
+  const stats = await res.json();
+  const el = document.getElementById("stats");
+  if (!stats.totalReviews) {
+    el.textContent = "No stats available.";
+    return;
+  }
+  el.innerHTML = `
+    <strong>${stats.totalReviews}</strong> total reviews |
+    <strong>Average rating:</strong> ${stats.avgRating} ⭐ |
+    <strong>Verified purchases:</strong> ${stats.verifiedPercent}%`;
+}
+
+// === Render table ===
+function renderTable(items) {
+  const table = document.getElementById("reviewsTable");
+  if (!items || !items.length) {
+    table.innerHTML = "<tr><td>No data found</td></tr>";
     return;
   }
 
-  // If no columns provided, infer all keys from data (including flexible ones)
-  if (!cols) {
-    cols = Array.from(new Set(items.flatMap((it) => Object.keys(it))));
-  }
-
-  const headers = "<tr>" + cols.map((c) => `<th>${c}</th>`).join("") + "</tr>";
+  const headers = `
+    <tr>
+      <th>Title</th>
+      <th>Text</th>
+      <th>Rating</th>
+      <th>Product</th>
+      <th>User ID</th>
+      <th>Verified</th>
+      <th>Timestamp</th>
+    </tr>`;
 
   const rows = items
-    .map((it) => {
-      return (
-        "<tr>" +
-        cols
-          .map((c) => {
-            let val = it[c];
-            if (val === null || val === undefined) val = "";
-            if (typeof val === "object") val = JSON.stringify(val, null, 0);
-            return `<td>${val}</td>`;
-          })
-          .join("") +
-        "</tr>"
-      );
+    .map((r) => {
+      const asin = r.asin || "";
+      const productUrl = asin ? `https://www.amazon.com/dp/${asin}` : "#";
+
+      const productCell = asin
+        ? `<a href="${productUrl}" target="_blank">${asin}
+           </a>`
+        : "";
+
+      return `
+        <tr>
+          <td>${r.title || ""}</td>
+          <td>${r.text?.slice(0, 150) || ""}</td>
+          <td>${r.rating ?? ""}</td>
+          <td>${productCell}</td>
+          <td>${r.user_id || ""}</td>
+          <td>${r.verified_purchase ? "✅" : "❌"}</td>
+          <td>${
+            r.timestamp ? new Date(r.timestamp).toLocaleDateString("en-GB") : ""
+          }</td>
+        </tr>`;
     })
     .join("");
 
   table.innerHTML = headers + rows;
 }
 
-// === CSV Upload Handler ===
-document.querySelectorAll(".csvForm").forEach((form) => {
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
+// === Pagination controls ===
+function renderPager(currentPage, totalItems) {
+  const totalPages = Math.max(1, Math.ceil(totalItems / LIMIT));
+  const container = document.getElementById("reviewsPager");
+  container.innerHTML = `
+    <div>
+      <button ${currentPage <= 1 ? "disabled" : ""} id="prevBtn">Prev</button>
+      <span>Page ${currentPage} / ${totalPages}</span>
+      <button ${
+        currentPage >= totalPages ? "disabled" : ""
+      } id="nextBtn">Next</button>
+    </div>`;
 
-    const type = form.getAttribute("data-type");
-    const fileInput = form.querySelector("input[type=file]");
-    const resultText = document.getElementById("uploadResult");
-    const formData = new FormData();
-
-    if (!fileInput.files.length) return alert("Select a .CSV file first.");
-    formData.append("file", fileInput.files[0]);
-
-    resultText.textContent = `Importing ${type}...`;
-
-    try {
-      const res = await fetch(`/upload-csv/${type}`, {
-        method: "POST",
-        body: formData,
-      });
-      const data = await res.json();
-      resultText.textContent = data.message || data.error;
-      resultText.style.opacity = 1;
-
-      // Wait a moment for MongoDB to finish indexing
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      // Now fetch data sequentially
-      await fetchData();
-      await fetchAnalysis();
-
-      resultText.style.opacity = 0.6;
-    } catch {
-      resultText.textContent = "Import failed.";
+  document.getElementById("prevBtn").onclick = () => {
+    if (currentPage > 1) {
+      page--;
+      searchAndFetch();
     }
-  });
-});
-
-async function fetchAnalysis() {
-  const res = await fetch("/analysis/critical-reviews");
-  const data = await res.json();
-  const el = document.getElementById("analysisResult");
-
-  if (data.error) {
-    el.textContent = "Error calculating analysis.";
-    return;
-  }
-
-  if (data.total === 0) {
-    el.textContent = "Niciun review critic care conține 'dar'.";
-    return;
-  }
-
-  const reviewList = data.reviews
-    .map((r) => `<li>"${r.comment}" <span style="opacity:0.7;"></span></li>`)
-    .join("");
-
-  el.innerHTML = `
-<p style="font-size: 1.2rem; font-weight: 500; margin-top: -1.5rem">
-  Review-uri critice (care conțin 'dar'): 
-  <span style="font-size: 4rem; font-weight: 900; display: inline-block; margin-left: 1rem; background: linear-gradient(180deg, #3b82f6 0%, #1e40af 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">${data.total}</span>
-</p>
-    <ol style="font-size: 1.2rem">${reviewList}</ol>
-  `;
+  };
+  document.getElementById("nextBtn").onclick = () => {
+    if (currentPage < totalPages) {
+      page++;
+      searchAndFetch();
+    }
+  };
 }
 
-// === Clear Table Buttons ===
-document.querySelectorAll(".clearBtn").forEach((btn) => {
-  btn.addEventListener("click", async () => {
-    const type = btn.getAttribute("data-type");
-    if (!confirm(`Are you sure you want to delete all ${type}?`)) return;
+// === Search handler ===
+function searchAndFetch() {
+  const query = document.getElementById("searchInput").value.trim();
+  const minRating = document.getElementById("minRatingInput").value.trim();
+  fetchReviews(page, query, minRating);
+}
 
-    try {
-      const res = await fetch(`/clear/${type}`, { method: "DELETE" });
-      const data = await res.json();
-      alert(data.message || data.error);
-      fetchData();
-      fetchAnalysis();
-    } catch (err) {
-      alert("Failed to clear data.");
-      console.error(err);
-    }
-  });
+// === Initialize ===
+document.getElementById("searchBtn").addEventListener("click", () => {
+  page = 1;
+  searchAndFetch();
 });
 
-// Load data when the page opens
-fetchData();
-fetchAnalysis();
+// === Charts ===
+
+async function drawCharts() {
+  await drawRatingChart();
+  await drawTimeChart();
+}
+
+async function drawRatingChart() {
+  const res = await fetch("/agg/ratings-distribution");
+  const data = await res.json();
+
+  const labels = data.map((d) => d._id);
+  const counts = data.map((d) => d.count);
+
+  const ctx = document.getElementById("ratingChart").getContext("2d");
+  new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "Number of Reviews per Rating",
+          data: counts,
+          backgroundColor: "#a78bfa",
+        },
+      ],
+    },
+    options: {
+      plugins: {
+        title: {
+          display: true,
+          text: "Ratings Distribution (1–5 Stars)",
+          color: "#fff",
+        },
+        legend: { display: false },
+      },
+      scales: {
+        x: { ticks: { color: "#ccc" } },
+        y: { ticks: { color: "#ccc" } },
+      },
+    },
+  });
+}
+
+async function drawTimeChart() {
+  const res = await fetch("/agg/reviews-per-year");
+  const data = await res.json();
+
+  const labels = data.map((d) => d._id);
+  const counts = data.map((d) => d.count);
+
+  const ctx = document.getElementById("timeChart").getContext("2d");
+  new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "Reviews per Year",
+          data: counts,
+          borderColor: "#8b5cf6",
+          backgroundColor: "rgba(139, 92, 246, 0.3)",
+          fill: true,
+        },
+      ],
+    },
+    options: {
+      plugins: {
+        title: {
+          display: true,
+          text: "Review Activity Over Time",
+          color: "#fff",
+        },
+        legend: { display: false },
+      },
+      scales: {
+        x: { ticks: { color: "#ccc" } },
+        y: { ticks: { color: "#ccc" } },
+      },
+    },
+  });
+}
+
+// Run charts after load
+drawCharts();
+
+fetchReviews();
+fetchStats();

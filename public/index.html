@@ -2,64 +2,52 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>MongoDB Reviews Dashboard</title>
-    <script src="script.js" defer></script>
+    <title>Software Reviews Dashboard</title>
     <link rel="stylesheet" href="style.css" />
+    <script src="script.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
+
   <body>
-    <h1>MongoDB Reviews Dashboard</h1>
+    <header>
+      <h1>Software Reviews Dashboard</h1>
+    </header>
 
     <section>
-      <h2>Import Data (.CSV)</h2>
+      <h2>Review Data</h2>
+      <div id="stats" class="stats-box">Loading stats...</div>
 
-      <form class="csvForm" data-type="users">
-        <label>Users:</label>
-        <input type="file" accept=".csv" required />
-        <button type="submit">Upload Users CSV</button>
-      </form>
+      <div class="search-controls">
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Search text or title..."
+        />
+        <input
+          type="number"
+          id="minRatingInput"
+          placeholder="Min rating (1-5)"
+          min="1"
+          max="5"
+        />
+        <button id="searchBtn">Search</button>
+      </div>
 
-      <form class="csvForm" data-type="products">
-        <label>Products: </label>
-        <input type="file" accept=".csv" required />
-        <button type="submit">Upload Products CSV</button>
-      </form>
+      <div class="table-container">
+        <table id="reviewsTable"></table>
+      </div>
 
-      <form class="csvForm" data-type="reviews">
-        <label>Reviews:</label>
-        <input type="file" accept=".csv" required />
-        <button type="submit">Upload Reviews CSV</button>
-      </form>
+      <div id="reviewsPager" class="pager"></div>
 
-      <p id="uploadResult"></p>
-    </section>
+      <div id="chartCon">
+        <div class="chart-container">
+          <canvas id="ratingChart"></canvas>
+        </div>
 
-    <section>
-      <h2>
-        Products
-        <button class="clearBtn" data-type="products">Clear Table</button>
-      </h2>
-      <table id="productsTable"></table>
-    </section>
-
-    <section>
-      <h2>
-        Users
-        <button class="clearBtn" data-type="users">Clear Table</button>
-      </h2>
-      <table id="usersTable"></table>
-    </section>
-
-    <section>
-      <h2>
-        Reviews
-        <button class="clearBtn" data-type="reviews">Clear Table</button>
-      </h2>
-      <table id="reviewsTable"></table>
-    </section>
-
-    <section>
-      <h2>Data Analysis</h2>
-      <div id="analysisResult">Loading analysis...</div>
+        <div class="chart-container">
+          <canvas id="timeChart"></canvas>
+        </div>
+      </div>
     </section>
   </body>
 </html>

@@ -1,6 +1,0 @@
-﻿name,category,price,inStock,details
-Gaming Keyboard,Accessories,300,TRUE,"{""color"":""black"",""switch"":""mechanical""}"
-Noise Cancelling Headphones,Electronics,1200,TRUE,"{""battery"":""30h"",""bluetooth"":""5.2""}"
-Smartwatch Pro,Wearables,950,FALSE,"{""waterproof"":true,""healthFeatures"":[""heartRate"",""sleepTracking""]}"
-4K Monitor 27'',Electronics,1600,TRUE,"{""panel"":""IPS"",""refreshRate"":""144Hz""}"
-Wireless Mouse Pro,Accessories,280,TRUE,
