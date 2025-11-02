@@ -13,34 +13,82 @@ mongoose
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-  .then(() => console.log("✅ Connected to MongoDB"))
+  .then(async () => {
+    console.log("✅ Connected to MongoDB");
+
+    // === Ensure indexes exist ===
+    try {
+      await SoftwareReview.collection.createIndex({ asin: 1 });
+      await SoftwareReview.collection.createIndex({ rating: 1 });
+      await SoftwareReview.collection.createIndex({ verified_purchase: 1 });
+      await SoftwareReview.collection.createIndex({
+        text: "text",
+        title: "text",
+      });
+      console.log("⚙️ Indexes ensured successfully");
+    } catch (idxErr) {
+      console.error("⚠️ Failed to create indexes:", idxErr);
+    }
+  })
   .catch((err) => console.error("❌ MongoDB connection error:", err));
 
 // --- MAIN ROUTE: Paginated software reviews ---
 app.get("/software", async (req, res) => {
   try {
     const page = Math.max(1, parseInt(req.query.page || "1"));
-    const limit = Math.min(100, parseInt(req.query.limit || "50"));
+    const limit = Math.min(200, parseInt(req.query.limit || "50"));
     const skip = (page - 1) * limit;
 
-    // Filtering
-    const query = {};
+    const filter = {};
+
+    // Text search
     if (req.query.q) {
-      const regex = new RegExp(req.query.q, "i");
-      query.$or = [{ title: regex }, { text: regex }];
+      filter.$or = [
+        { text: { $regex: req.query.q, $options: "i" } },
+        { title: { $regex: req.query.q, $options: "i" } },
+      ];
     }
-    if (req.query.minRating)
-      query.rating = { $gte: Number(req.query.minRating) };
+
+    // Min rating
+    if (req.query.minRating) {
+      filter.rating = { $gte: Number(req.query.minRating) };
+    }
+
+    // Verified only
+    if (req.query.verified === "true") {
+      filter.verified_purchase = true;
+    }
+
+    // Filter by year
+    if (req.query.year) {
+      const year = parseInt(req.query.year);
+      const start = new Date(`${year}-01-01`);
+      const end = new Date(`${year + 1}-01-01`);
+      filter.timestamp = { $gte: start.getTime(), $lt: end.getTime() };
+    }
+
+    // Sorting
+    const sortMap = {
+      rating_desc: { rating: -1 },
+      rating_asc: { rating: 1 },
+      date_desc: { timestamp: -1 },
+      date_asc: { timestamp: 1 },
+    };
+    const sortOption = sortMap[req.query.sort] || { _id: -1 };
 
     const [docs, total] = await Promise.all([
-      SoftwareReview.find(query).skip(skip).limit(limit).lean(),
-      SoftwareReview.countDocuments(query),
+      SoftwareReview.find(filter)
+        .sort(sortOption)
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      SoftwareReview.countDocuments(filter),
     ]);
 
     res.json({ docs, total, page, limit });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Failed to fetch software reviews." });
+    res.status(500).json({ error: "Query failed" });
   }
 });
 

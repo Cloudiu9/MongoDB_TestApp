@@ -2,12 +2,22 @@ let page = 1;
 const LIMIT = 50;
 
 // === Fetch paginated reviews ===
-async function fetchReviews(pageNum = 1, query = "", minRating = "") {
+async function fetchReviews(
+  pageNum = 1,
+  query = "",
+  minRating = "",
+  year = "",
+  verified = false,
+  sort = ""
+) {
   const url = new URL("/software", window.location.origin);
   url.searchParams.set("page", pageNum);
   url.searchParams.set("limit", LIMIT);
   if (query) url.searchParams.set("q", query);
   if (minRating) url.searchParams.set("minRating", minRating);
+  if (year) url.searchParams.set("year", year);
+  if (verified) url.searchParams.set("verified", "true");
+  if (sort) url.searchParams.set("sort", sort);
 
   const res = await fetch(url);
   const data = await res.json();
@@ -75,7 +85,10 @@ function renderTable(items) {
     })
     .join("");
 
-  table.innerHTML = headers + rows;
+  table.innerHTML = headers;
+  requestAnimationFrame(() => {
+    table.insertAdjacentHTML("beforeend", rows);
+  });
 }
 
 // === Pagination controls ===
@@ -84,11 +97,17 @@ function renderPager(currentPage, totalItems) {
   const container = document.getElementById("reviewsPager");
   container.innerHTML = `
     <div>
-      <button ${currentPage <= 1 ? "disabled" : ""} id="prevBtn">Prev</button>
+    <button ${page <= 10 ? "disabled" : ""} id="prev10">« 10</button>
+    <button ${currentPage <= 1 ? "disabled" : ""} id="prevBtn">Prev</button>
+
       <span>Page ${currentPage} / ${totalPages}</span>
-      <button ${
-        currentPage >= totalPages ? "disabled" : ""
-      } id="nextBtn">Next</button>
+
+    <button ${
+      currentPage >= totalPages ? "disabled" : ""
+    } id="nextBtn">Next</button>
+    <button ${
+      page >= totalPages - 9 ? "disabled" : ""
+    } id="next10">10 »</button>
     </div>`;
 
   document.getElementById("prevBtn").onclick = () => {
@@ -103,17 +122,43 @@ function renderPager(currentPage, totalItems) {
       searchAndFetch();
     }
   };
+  container.querySelector(`#prev10`).onclick = () => {
+    if (currentPage < totalPages) {
+      page -= 10;
+      searchAndFetch();
+    }
+  };
+  container.querySelector(`#next10`).onclick = () => {
+    if (currentPage < totalPages) {
+      page += 10;
+      searchAndFetch();
+    }
+  };
 }
 
 // === Search handler ===
 function searchAndFetch() {
   const query = document.getElementById("searchInput").value.trim();
   const minRating = document.getElementById("minRatingInput").value.trim();
-  fetchReviews(page, query, minRating);
+  const year = document.getElementById("yearInput").value.trim();
+  const verified = document.getElementById("verifiedCheckbox").checked;
+  const sort = document.getElementById("sortSelect").value;
+
+  fetchReviews(page, query, minRating, year, verified, sort);
 }
 
 // === Initialize ===
 document.getElementById("searchBtn").addEventListener("click", () => {
+  page = 1;
+  searchAndFetch();
+});
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+  document.getElementById("searchInput").value = "";
+  document.getElementById("minRatingInput").value = "";
+  document.getElementById("yearInput").value = "";
+  document.getElementById("verifiedCheckbox").checked = false;
+  document.getElementById("sortSelect").value = "";
   page = 1;
   searchAndFetch();
 });

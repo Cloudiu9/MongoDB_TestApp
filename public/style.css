@@ -73,6 +73,14 @@ input {
   width: 200px;
 }
 
+#verifiedCheckbox {
+  width: 20px;
+}
+
+#sortSelect {
+  margin-left: 50px;
+}
+
 .pager {
   margin-top: 10px;
 }
@@ -88,7 +96,6 @@ input {
 }
 
 #chartCon {
-  padding-top: 50px;
   display: flex;
   justify-content: space-evenly;
   align-items: center;

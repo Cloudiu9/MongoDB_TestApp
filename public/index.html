@@ -17,20 +17,29 @@
       <h2>Review Data</h2>
       <div id="stats" class="stats-box">Loading stats...</div>
 
-      <div class="search-controls">
-        <input
-          type="text"
-          id="searchInput"
-          placeholder="Search text or title..."
-        />
+      <div id="filters" style="margin-bottom: 1rem">
+        <input type="text" id="searchInput" placeholder="Search text..." />
         <input
           type="number"
           id="minRatingInput"
-          placeholder="Min rating (1-5)"
+          placeholder="Min rating (1–5)"
           min="1"
           max="5"
         />
-        <button id="searchBtn">Search</button>
+        <input type="number" id="yearInput" placeholder="Year (e.g. 2020)" />
+        <label>
+          <input type="checkbox" id="verifiedCheckbox" />
+          Verified only
+        </label>
+        <select id="sortSelect">
+          <option value="">Sort by...</option>
+          <option value="rating_desc">Rating ⬇</option>
+          <option value="rating_asc">Rating ⬆</option>
+          <option value="date_desc">Newest</option>
+          <option value="date_asc">Oldest</option>
+        </select>
+        <button id="searchBtn">Apply Filters</button>
+        <button id="resetBtn">Reset</button>
       </div>
 
       <div class="table-container">
@@ -38,6 +47,8 @@
       </div>
 
       <div id="reviewsPager" class="pager"></div>
+
+      <h2>Data Analysis</h2>
 
       <div id="chartCon">
         <div class="chart-container">
