@@ -10,20 +10,26 @@ async function fetchReviews(
   verified = false,
   sort = ""
 ) {
-  const url = new URL("/software", window.location.origin);
-  url.searchParams.set("page", pageNum);
-  url.searchParams.set("limit", LIMIT);
-  if (query) url.searchParams.set("q", query);
-  if (minRating) url.searchParams.set("minRating", minRating);
-  if (year) url.searchParams.set("year", year);
-  if (verified) url.searchParams.set("verified", "true");
-  if (sort) url.searchParams.set("sort", sort);
+  showSpinner();
 
-  const res = await fetch(url);
-  const data = await res.json();
+  try {
+    const url = new URL("/software", window.location.origin);
+    url.searchParams.set("page", pageNum);
+    url.searchParams.set("limit", LIMIT);
+    if (query) url.searchParams.set("q", query);
+    if (minRating) url.searchParams.set("minRating", minRating);
+    if (year) url.searchParams.set("year", year);
+    if (verified) url.searchParams.set("verified", "true");
+    if (sort) url.searchParams.set("sort", sort);
 
-  renderTable(data.docs);
-  renderPager(data.page, data.total);
+    const res = await fetch(url);
+    const data = await res.json();
+
+    renderTable(data.docs);
+    renderPager(data.page, data.total);
+  } finally {
+    hideSpinner();
+  }
 }
 
 // === Fetch global statistics ===
@@ -145,6 +151,15 @@ function searchAndFetch() {
   const sort = document.getElementById("sortSelect").value;
 
   fetchReviews(page, query, minRating, year, verified, sort);
+}
+
+// === Loaidng Spinner ===
+function showSpinner() {
+  document.getElementById("loadingSpinner").style.display = "block";
+}
+
+function hideSpinner() {
+  document.getElementById("loadingSpinner").style.display = "none";
 }
 
 // === Initialize ===

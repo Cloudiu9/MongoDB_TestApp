@@ -5,6 +5,19 @@ body {
   margin: 2rem;
 }
 
+#loadingSpinner {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 12px 18px;
+  border-radius: 8px;
+  font-size: 18px;
+  z-index: 9999;
+}
+
 h1,
 h2 {
   color: #a78bfa;
